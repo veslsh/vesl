@@ -1,0 +1,278 @@
+#!/usr/bin/env php
+<?php
+
+/*
+ * This file is part of vesl.
+ *
+ * (c) Jim Fisk <jim.fisk@jantcu.com>
+ *
+ * For the full copyright and license information, please view the MIT
+ * license located at https://github.com/Jantcu/vesl/blob/master/LICENSE.
+ */
+
+function vesl($argv) {
+
+  // Get the user input.
+  $arguments = $argv;
+  // Remove the first argument, typically the string "/usr/local/bin/vesl".
+  array_shift($arguments);
+
+  // If there are no arguments supplied by user, display default vesl info.
+  if (empty($arguments)) {
+    brand();
+    version();
+    echo "\r\n";
+    options();
+    echo "\r\n";
+    commands();
+  }
+  foreach ($arguments as $key => $arg) {
+    switch ($arg) {
+      case "--version":
+      case "-v":
+        version();
+        break 2;
+
+      case "--list":
+      case "-ls":
+        envlist();
+        break 2;
+
+      case "create":
+        $output = shell_exec('docker ps -a');
+        echo $output;
+        echo "creating....";
+        echo "\r\n";
+        break 2;
+
+      case "start":
+        start($arguments, $key);
+        break 2;
+
+      default:
+        invalid();
+        break 2;
+    }
+  }
+}
+
+// Call the vesl function to kick everything off.
+vesl($argv);
+
+// Defines the current vesl release.
+function version() {
+
+  $colors = new Colors();
+
+  $VERSION = "0.1";
+
+  echo $colors->getColoredString("vesl", "green");
+  echo " Version ";
+  echo $colors->getColoredString($VERSION, "yellow");
+  echo "\r\n";
+
+}
+
+// Draws "vesl" in CLI block letters.
+function brand() {
+
+  echo "                _        _~     ";
+  echo "\r\n";
+  echo "__   _____  ___| |   _~ )_)_~   ";
+  echo "\r\n";
+  echo "\ \ / / _ \/ __| |   )_))_))_)  ";
+  echo "\r\n";
+  echo " \ V /  __/\__ \ |   _!__!__!_  ";
+  echo "\r\n";
+  echo "  \_/ \___||___/_|   \_______/  ";
+  echo "\r\n";
+  echo "~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~";
+  echo "\r\n";
+  echo "^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^";
+  echo "\r\n";
+  echo "\r\n";
+
+}
+
+// Defines the available commands
+function options() {
+
+  $colors = new Colors();
+
+  echo $colors->getColoredString("Options:", "yellow");
+  echo "\r\n";
+  echo $colors->getColoredString("  --help, -h", "green");
+  echo "           Documentation providing additional context for commands.";
+  echo "\r\n";
+  echo $colors->getColoredString("  --version, -v", "green");
+  echo "        Prints release details of the vesl that you are using.";
+  echo "\r\n";
+  echo $colors->getColoredString("  --list, -ls", "green");
+  echo "          Displays all containers available to vesl.";
+  echo "\r\n";
+  echo $colors->getColoredString("  --all, -a", "green");
+  echo "            Displays all containers available to vesl.";
+  echo "\r\n";
+
+}
+
+// Defines the available commands
+function commands() {
+
+  $colors = new Colors();
+
+  echo $colors->getColoredString("Commands:", "yellow");
+  echo "\r\n";
+  echo $colors->getColoredString("  load", "green");
+  echo "           Loads a vesl environment from a preconfigured docker image.";
+  echo "\r\n";
+  echo $colors->getColoredString("  use", "green");
+  echo "            Sets a vesl environment to be used when creating a new container.";
+  echo "\r\n";
+  echo $colors->getColoredString("  release", "green");
+  echo "        Deletes a downloaded docker image using the 'rmi' command.";
+  echo "\r\n";
+  echo $colors->getColoredString("  create", "green");
+  echo "         Creates a new docker container from the vesl image.";
+  echo "\r\n";
+  echo $colors->getColoredString("  destroy", "green");
+  echo "        Deletes all references to an existing docker container.";
+  echo "\r\n";
+  echo $colors->getColoredString("  start", "green");
+  echo "          Starts a docker container that has already been created.";
+  echo "\r\n";
+  echo $colors->getColoredString("  stop", "green");
+  echo "           Stops a running docker container.";
+  echo "\r\n";
+
+}
+
+// Defines the current vesl release.
+function invalid() {
+
+  $colors = new Colors();
+
+  echo $colors->getColoredString("Please supply a valid vesl command or option.", "white", "red");
+  echo "\r\n";
+  echo "Use ";
+  echo $colors->getColoredString("vesl --help", "green");
+  echo " for to see what's available.";
+  echo "\r\n";
+
+}
+
+// Start an existing docker container.
+function start($arguments, $key) {
+  $colors = new Colors();
+  $existing_containers_str = shell_exec("docker ps -a --format '{{.Names}}'");
+  $existing_containers = explode("\n", $existing_containers_str);
+  $container = $arguments[$key+1];
+  if (in_array($container, $existing_containers)) {
+    $output = shell_exec("docker start $container");
+    echo $output;
+    $output = shell_exec("docker exec -it $container service apache2 start");
+    echo $output;
+    $output = shell_exec("docker exec -it $container service mysql start");
+    echo $output;
+    //$output = shell_exec("docker attach $container");
+    //$output = shell_exec("docker exec -it $container /bin/bash");
+    $output = shell_exec("docker exec -ti $container script -q -c 'fish' /dev/null");
+    echo $output;
+  }
+  else {
+    echo $colors->getColoredString("vesl could not find an existing container called $container.", "white", "red");
+    echo "\r\n";
+    echo "Please check that you have spelled your container name correctly. To see all containers use: ";
+    echo $colors->getColoredString("vesl -ls", "green");
+    echo "\r\n";
+    echo "If you have not created the environment yet, you can do so with the following command: ";
+    echo $colors->getColoredString("vesl create $container", "green");
+    echo "\r\n";
+  }
+}
+
+// List all existing docker containers.
+function envlist() {
+  $colors = new Colors();
+  $containers = shell_exec("docker ps -a --format '{{.Names}}  {{.Ports}}'");
+  $containers = explode("\n", $containers);
+  $running_containers = shell_exec("docker ps --format '{{.Names}}  {{.Ports}}'");
+  $running_containers = explode("\n", $running_containers);
+  foreach ($containers as $container) {
+    if (in_array($container,$running_containers)) {
+      $container_details = explode("  ", $container);
+      $container_name = isset($container_details[0]) ? $container_details[0] : null;
+      $container_ip = isset($container_details[1]) ? $container_details[1] : null;
+      echo $colors->getColoredString("$container_name ", "green");
+      echo $colors->getColoredString("$container_ip", "yellow");
+      echo "\r\n";
+    }
+    else if (strlen($container) > 0) {
+      echo $colors->getColoredString("$container", "red");
+      echo "\r\n";
+    }
+  }
+}
+
+// Allows use of font and background colors.
+class Colors {
+  private $foreground_colors = array();
+  private $background_colors = array();
+
+  public function __construct() {
+    // Set up shell colors
+    $this->foreground_colors['black'] = '0;30';
+    $this->foreground_colors['dark_gray'] = '1;30';
+    $this->foreground_colors['blue'] = '0;34';
+    $this->foreground_colors['light_blue'] = '1;34';
+    $this->foreground_colors['green'] = '0;32';
+    $this->foreground_colors['light_green'] = '1;32';
+    $this->foreground_colors['cyan'] = '0;36';
+    $this->foreground_colors['light_cyan'] = '1;36';
+    $this->foreground_colors['red'] = '0;31';
+    $this->foreground_colors['light_red'] = '1;31';
+    $this->foreground_colors['purple'] = '0;35';
+    $this->foreground_colors['light_purple'] = '1;35';
+    $this->foreground_colors['brown'] = '0;33';
+    $this->foreground_colors['yellow'] = '1;33';
+    $this->foreground_colors['light_gray'] = '0;37';
+    $this->foreground_colors['white'] = '1;37';
+
+    $this->background_colors['black'] = '40';
+    $this->background_colors['red'] = '41';
+    $this->background_colors['green'] = '42';
+    $this->background_colors['yellow'] = '43';
+    $this->background_colors['blue'] = '44';
+    $this->background_colors['magenta'] = '45';
+    $this->background_colors['cyan'] = '46';
+    $this->background_colors['light_gray'] = '47';
+  }
+  // Returns colored string
+  public function getColoredString($string, $foreground_color = null, $background_color = null) {
+    $colored_string = "";
+
+    // Check if given foreground color found
+    if (isset($this->foreground_colors[$foreground_color])) {
+      $colored_string .= "\033[" . $this->foreground_colors[$foreground_color] . "m";
+    }
+    // Check if given background color found
+    if (isset($this->background_colors[$background_color])) {
+      $colored_string .= "\033[" . $this->background_colors[$background_color] . "m";
+    }
+
+    // Add string and end coloring
+    $colored_string .=  $string . "\033[0m";
+
+    return $colored_string;
+  }
+
+  // Returns all foreground color names
+  public function getForegroundColors() {
+    return array_keys($this->foreground_colors);
+  }
+
+  // Returns all background color names
+  public function getBackgroundColors() {
+    return array_keys($this->background_colors);
+  }
+}
