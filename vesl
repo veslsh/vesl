@@ -7,44 +7,105 @@
 
 # Draws "vesl" in CLI block letters.
 function veslbrand() {
-  echo "                _        _~     "
-  echo "__   _____  ___| |   _~ )_)_~   "
-  echo "\ \ / / _ \/ __| |   )_))_))_)  "
-  echo " \ V /  __/\__ \ |   _!__!__!_  "
-  echo "  \_/ \___||___/_|   \_______/  "
+  echo -e "${LightCyan}                _   ${LightPurple}     _~    ${NC} "
+  echo -e "${LightCyan}__   _____  ___| |  ${LightPurple} _~ )_)_~  ${NC} "
+  echo -e "${LightCyan}\ \ / / _ \/ __| |  ${LightPurple} )_))_))_) ${NC} "
+  echo -e "${LightCyan} \ V /  __/\__ \ |  ${LightPurple} _!__!__!_ ${NC} "
+  echo -e "${LightCyan}  \_/ \___||___/_|  ${LightPurple} \_______/ ${NC} "
+  echo -e "${LightBlue}"
   echo "~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~ "
   echo "^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^ "
+  echo -e "${NC}"
+}
+
+# Define colors
+Black='\033[0;30m'
+DarkGray='\033[1;30m'
+Red='\033[0;31m'
+LightRed='\033[1;31m'
+Green='\033[0;32m'
+LightGreen='\033[1;32m'
+BrownOrange='\033[0;33m'
+Yellow='\033[1;33m'
+Blue='\033[0;34m'
+LightBlue='\033[1;34m'
+Purple='\033[0;35m'
+LightPurple='\033[1;35m'
+Cyan='\033[0;36m'
+LightCyan='\033[1;36m'
+LightGray='\033[0;37m'
+White='\033[1;37m'
+NC='\033[0m' # No Color
+
+# Prints the current version of the project
+function veslversion() {
+  echo -e "${Green}Version ${Yellow}0.0.SeriouslyThisIsExperimental${NC}"
 }
 
 # Defines the available commands
 function vesloptions() {
-  echo "Options:"
-  echo "  --help, -h        Documentation providing additional context for commands."
-  echo "  --version, -v     Prints release details of the vesl that you are using."
-  echo "  --all, -a         Add to the 'list' command to display all containers available to vesl."
+  echo -e "${Yellow}Options:${NC}"
+  echo -e "${Green}  --help${NC},${Green} -h${NC}        Documentation providing additional context for commands."
+  echo -e "${Green}  --version${NC},${Green} -v${NC}     Prints release details of the vesl that you are using."
+  echo -e "${Green}  --all${NC},${Green} -a${NC}         Add to the 'list' command to display all containers available to vesl."
 }
 
 # Defines the available commands
 function veslcommands() {
-  echo "Commands:"
-  echo "  load              Downloads a vesl blueprint (docker image)."
-  echo "  use               Sets the blueprint (docker image) for creating a new vesl (docker container)."
-  echo "  release           Deletes a blueprint (docker image) using the 'rmi' command."
-  echo "  list, ls          Displays all vesls (docker containers) created using a vesl blueprint."
-  echo "  create            Creates a new vesl (docker container) from the vesl blueprint in 'use'."
-  echo "  destroy           Deletes all references to an existing vesl (docker container)."
-  echo "  sail, start       Starts a vesl (docker container) that has already been created."
-  echo "  sink, stop        Stops a vesl (docker container) that is currently running."
+  echo -e "${Yellow}Commands:${NC}"
+  echo -e "${Green}  load${NC}              Downloads a vesl blueprint (docker image)."
+  echo -e "${Green}  use${NC}               Sets the blueprint (docker image) for creating a new vesl (docker container)."
+  echo -e "${Green}  release${NC}           Deletes a blueprint (docker image) using the 'rmi' command."
+  echo -e "${Green}  list${NC},${Green} ls${NC}          Displays all vesls (docker containers) created using a vesl blueprint."
+  echo -e "${Green}  cast${NC},${Green} create${NC}      Creates a new vesl (docker container) from the vesl blueprint in 'use'."
+  echo -e "${Green}  sink${NC},${Green} destroy${NC}     Deletes all references to an existing vesl (docker container)."
+  echo -e "${Green}  sail${NC},${Green} start${NC}       Starts a vesl (docker container) that has already been created."
+  echo -e "${Green}  dock${NC},${Green} stop${NC}        Stops a vesl (docker container) that is currently running."
 }
 
-# Start an existing docker container.
+# Start an existing vesl.
 function veslstart() {
   if [[ -n "$arg" ]]; then
     container=$arg
+    echo -ne "Starting vesl "
     docker start $container
     docker exec -it $container service apache2 start
     docker exec -it $container service mysql start
-    docker exec -ti $container script -q -c "fish" /dev/null    
+    docker exec -it $container script -q -c "fish" /dev/null    
+  else
+    echo "Please specify a vesl"
+  fi
+}
+
+# Stop a running vesl.
+function veslstop() {
+  if [[ -n "$arg" ]]; then
+    container=$arg
+    echo -ne "Stopping vesl "
+    docker stop $container
+  else
+    echo "Please specify a vesl"
+  fi
+}
+
+# Create a new vesl.
+function veslcreate() {
+  if [[ -n "$arg" ]]; then
+    container=$arg
+    echo -ne "Creating vesl $container (not really.. this still needs to be built)"
+  else
+    echo "Please specify a vesl"
+  fi
+}
+# Delete a vesl.
+function vesldestroy() {
+  if [[ -n "$arg" ]]; then
+    container=$arg
+    read -p "Are you sure you want to permanently delete $container? " -n 1 -r
+    echo $'\r'
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      echo -ne "Deleting vesl $container (not really.. this still needs to be built)"
+    fi
   else
     echo "Please specify a vesl"
   fi
@@ -52,29 +113,50 @@ function veslstart() {
 
 # List all existing docker containers.
 function vesllist() {
-  docker ps -a --format '{{.Names}}  {{.Ports}}'
+  #printf "${LightBlue}Vesl${NC} %-30s | ${LightBlue}Location${NC} %-30s | ${LightBlue}Status${NC}"
+  #docker ps -a --format '{{.Names}}  {{.Ports}}'
+  #docker ps -a --format '{{.Names}} {{ printf "%-15s |" }}| {{.Ports}} {{ printf "%-15s |" }}'
+  #docker ps -a --format '{{.Names}} printf "%-30s |" {{.Ports}}'
+  #docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}"
+  #docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" | grep "" | awk '{ print $1 }'
+  docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=jantcu/dstart
+  echo -e "${LightBlue}Drupal Vesls${NC}"
+  docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=vesl/drupal
+  echo -e "${LightBlue}Wordpress Vesls${NC}"
+  docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=vesl/wordpress
 }
 
 # Get the user input
 command=$1
 arg=$2
-# Check to see if user actually gave input
 if [[ -n "$command" ]]; then
-  if [[ $command == "sail" ]]; then
+  if [[ $command == "sail" ]] || [[ $command == "start" ]]; then
     veslstart
+  elif [[ $command == "dock" ]] || [[ $command == "stop" ]]; then
+    veslstop
+  elif [[ $command == "cast" ]] || [[ $command == "create" ]]; then
+    veslcreate
+  elif [[ $command == "sink" ]] || [[ $command == "destroy" ]]; then
+    vesldestroy
   elif [[ $command == "list" ]] || [[ $command == "ls" ]]; then
     vesllist
-  elif [[ $command == "--help" ]]; then
+  elif [[ $command == "--help" ]] || [[ $command == "-h" ]]; then
     vesloptions
     veslcommands
+  elif [[ $command == "--version" ]] || [[ $command == "-v" ]]; then
+    veslversion
   else
-    echo \"$command\" is not a valid command. Please use \"clideshow help\" to see what is available.
+    echo "$command is not a valid command. Please use \"vesl --help\" to see what is available."
   fi
 # The user did not give any input.
 else
-  # Add line break.
   echo $'\r'
   veslbrand
-  # Send welcome message.
-  echo "Welcome to vesl"
+  echo $'\r'
+  veslversion
+  echo $'\r'
+  vesloptions
+  echo $'\r'
+  veslcommands
+  echo $'\r'
 fi
