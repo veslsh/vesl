@@ -54,7 +54,7 @@ function vesloptions() {
 function veslcommands() {
   echo -e "${Yellow}Commands:${NC}"
   echo -e "${Green}  load${NC}              Downloads a vesl blueprint (docker image)."
-  echo -e "${Green}  use${NC}               Sets the blueprint (docker image) for creating a new vesl (docker container)."
+  #echo -e "${Green}  use${NC}               Sets the blueprint (docker image) for creating a new vesl (docker container)."
   echo -e "${Green}  release${NC}           Deletes a blueprint (docker image) using the 'rmi' command."
   echo -e "${Green}  list${NC},${Green} ls${NC}          Displays all vesls (docker containers) created using a vesl blueprint."
   echo -e "${Green}  cast${NC},${Green} create${NC}      Creates a new vesl (docker container) from the vesl blueprint in 'use'."
@@ -88,23 +88,46 @@ function veslstop() {
   fi
 }
 
-# Create a new vesl.
-function veslcreate() {
+# Load a blueprint.
+function veslload() {
   if [[ -n "$arg" ]]; then
-    container=$arg
-    echo -ne "Creating vesl $container (not really.. this still needs to be built)"
+    image=$arg
+    docker pull vesl/$image
   else
     echo "Please specify a vesl"
   fi
 }
+
+# Delete a blueprint.
+function veslrelease() {
+  if [[ -n "$arg" ]]; then
+    image=$arg
+    docker rmi vesl/$image
+  else
+    echo "Please specify a vesl"
+  fi
+}
+
+# Create a new vesl.
+function veslcreate() {
+  if [[ -n "$arg" ]]; then
+    image=$arg
+    read -p "Name your vesl: " container
+    echo $'\r'
+    docker run -dit --name $container -p 0.0.0.0:443:443 -p 0.0.0.0:80:80 vesl/$image /bin/bash
+  else
+    echo "Please specify a vesl"
+  fi
+}
+
 # Delete a vesl.
 function vesldestroy() {
   if [[ -n "$arg" ]]; then
     container=$arg
-    read -p "Are you sure you want to permanently delete $container? " -n 1 -r
+    read -p "Are you sure you want to permanently delete $container (y/n)? " -n 1 -r
     echo $'\r'
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-      echo -ne "Deleting vesl $container (not really.. this still needs to be built)"
+      docker rm $container
     fi
   else
     echo "Please specify a vesl"
@@ -113,17 +136,14 @@ function vesldestroy() {
 
 # List all existing docker containers.
 function vesllist() {
-  #printf "${LightBlue}Vesl${NC} %-30s | ${LightBlue}Location${NC} %-30s | ${LightBlue}Status${NC}"
-  #docker ps -a --format '{{.Names}}  {{.Ports}}'
-  #docker ps -a --format '{{.Names}} {{ printf "%-15s |" }}| {{.Ports}} {{ printf "%-15s |" }}'
-  #docker ps -a --format '{{.Names}} printf "%-30s |" {{.Ports}}'
-  #docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}"
-  #docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" | grep "" | awk '{ print $1 }'
-  docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=jantcu/dstart
-  echo -e "${LightBlue}Drupal Vesls${NC}"
-  docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=vesl/drupal
-  echo -e "${LightBlue}Wordpress Vesls${NC}"
-  docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=vesl/wordpress
+  if [[ $arg == "--all" ]] || [[ $arg == "-a" ]]; then
+    docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}"  
+  else
+    echo -e "${LightBlue}Drupal Vesls${NC}"
+    docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=vesl/drupal
+    echo -e "${LightBlue}Wordpress Vesls${NC}"
+    docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=vesl/wordpress
+  fi
 }
 
 # Get the user input
@@ -140,6 +160,10 @@ if [[ -n "$command" ]]; then
     vesldestroy
   elif [[ $command == "list" ]] || [[ $command == "ls" ]]; then
     vesllist
+  elif [[ $command == "load" ]]; then
+    veslload
+  elif [[ $command == "release" ]]; then
+    veslrelease
   elif [[ $command == "--help" ]] || [[ $command == "-h" ]]; then
     vesloptions
     veslcommands
