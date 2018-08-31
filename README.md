@@ -14,10 +14,10 @@ require a more custom and robust experience
 where you can use your own tools, we 
 suggest you check out one of the other 
 amazing projects that are doing something 
-similar in a production ready way:
-- https://github.com/lando/lando
-- https://github.com/docksal/docksal
-- https://github.com/acquia/blt
+similar in a production ready way
+([lando](https://github.com/lando/lando),
+[docksal](https://github.com/docksal/docksal),
+[blt](https://github.com/acquia/blt)).
 
 ## Getting started
 To test this project out locally you can clone it
