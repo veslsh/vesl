@@ -110,13 +110,41 @@ function veslrelease() {
 
 # Create a new vesl.
 function veslcreate() {
+	# Check that the user actually supplied an argument.
   if [[ -n "$arg" ]]; then
     image=$arg
+		# Check if the user input is a valid docker image.
+		if ! docker inspect --type=image vesl/$image >/dev/null; then
+			# If the image supplied by user doesn't exist, tell them and stop script.
+			echo -e "${Green}$image${NC} is NOT a valid vesl blueprint"
+			echo "Available blueprints: "
+			docker images --format "table{{ .Repository }}" | grep vesl | awk -F'/' '{print $2}'
+			exit
+		fi
+		# Ask the user to name the container they are creating.
     read -p "Name your vesl: " container
     echo $'\r'
-    docker run -dit --name $container -p 0.0.0.0:443:443 -p 0.0.0.0:80:80 vesl/$image /bin/bash
+		# Define an iterator
+    n=0
+		# Start a while loop that tries 5 times to get an open port.
+    until [ $n -ge 5 ]
+    do
+			# Create a random number between 1 and 50.
+			variant=$((1 + RANDOM % 50))
+			# Add the random number to the standard host port.
+			port=$(expr "80" + "$variant")
+			# Add the random number to the SSL/TLS port.
+			ssl_port=$(expr "443" + "$variant")
+			# Try to create the container with ports that were randomly created.
+			docker run -dit --name $container -p 0.0.0.0:$ssl_port:443 -p 0.0.0.0:$port:80 vesl/$image /bin/bash && break
+			# Increase the iterator.
+      n=$[$n+1]
+      sleep 15
+    done
   else
-    echo "Please specify a vesl"
+    echo "Please specify a blueprint"
+		echo "Available blueprints: "
+    docker images --format "table{{ .Repository }}" | grep vesl | awk -F'/' '{print $2}'
   fi
 }
 
