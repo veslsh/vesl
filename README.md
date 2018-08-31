@@ -1,7 +1,6 @@
 # Vesl
-This project is a bash script that makes it easy to
-manage your docker containers for local CMS (Drupal, 
-Wordpress, etc) development.
+
+Vesl Website: [vesl.sh](http://vesl.sh)
 
 The goal of vesl is to be the easiest 
 environment to use with all the tools and 
@@ -10,17 +9,15 @@ included out-of-the-box. That makes vesl an
 excellent candidate for training purposes,
 demos, and things like code sprints where
 ease of setup and consistency are more 
-important than extensibility. If you  
+important than extensibility. If you
 require a more custom and robust experience
 where you can use your own tools, we 
 suggest you check out one of the other 
 amazing projects that are doing something 
-similar in production ready way:
+similar in a production ready way:
 - https://github.com/lando/lando
 - https://github.com/docksal/docksal
 - https://github.com/acquia/blt
-
-Website coming soon: [vesl.sh](http://vesl.sh)
 
 ## Getting started
 To test this project out locally you can clone it
