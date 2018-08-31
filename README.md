@@ -21,19 +21,20 @@ similar in a production ready way
 
 ## Getting started
 To test this project out locally you can clone it
-and create a symlink in your path.
-
-On Ubuntu that would look something like this:
-(make sure you have git and docker already installed)
+and create a symlink in your path. On Ubuntu that
+would look something like this (make sure you have 
+[git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) 
+and [docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-16-04)
+already installed):
 ```
 cd ~/Downloads
 git clone git@github.com:veslsh/vesl.git
 sudo ln -s ~/Downloads/vesl/vesl /usr/local/bin/vesl
 ```
 
-If you want to use this project ongoing, you might want to 
-move the script somewhere besides your Downloads folder
-where it's likely to get deleted.
+> If you want to use this project ongoing, you might want to 
+> move the script somewhere besides your Downloads folder
+> so it's less likely to get deleted.
 
 ## Vesl Blueprints
 Most of the magic for this project does not actually happen
