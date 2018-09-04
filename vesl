@@ -136,7 +136,8 @@ function veslcreate() {
 			# Add the random number to the SSL/TLS port.
 			ssl_port=$(expr "443" + "$variant")
 			# Try to create the container with ports that were randomly created.
-			docker run -dit --name $container -p 0.0.0.0:$ssl_port:443 -p 0.0.0.0:$port:80 vesl/$image /bin/bash && break
+			#docker run -dit --name $container -p 0.0.0.0:$ssl_port:443 -p 0.0.0.0:$port:80 vesl/$image /bin/bash && break
+			docker run -dit --name $container -v $(pwd):/var/www/drupal -p 0.0.0.0:$ssl_port:443 -p 0.0.0.0:$port:80 vesl/$image /bin/bash && break
 			# Increase the iterator.
       n=$[$n+1]
       sleep 15
@@ -168,9 +169,9 @@ function vesllist() {
     docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}"  
   else
     echo -e "${LightBlue}Drupal Vesls${NC}"
-    docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=vesl/drupal
+    docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter "ancestor=vesl/drupal"
     echo -e "${LightBlue}Wordpress Vesls${NC}"
-    docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter=ancestor=vesl/wordpress
+    docker ps -a --format "table{{ .Image }}\\t{{ .Names }}\\t{{ .Status }}\\t{{ .Ports }}" --filter "ancestor=vesl/wordpress"
   fi
 }
 
